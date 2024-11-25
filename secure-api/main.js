@@ -27,7 +27,7 @@ app.use((req, res, next) => {
     }
 });
 
-app.use('/api', (req, res) => {
+app.use('/', (req, res) => {
     const url = `http://192.168.1.45:8096${req.originalUrl}`;
     axios({
         method: req.method,
