@@ -93,12 +93,15 @@
         </div>
     </div>
     <script>
-		let title = 'Spotlight', moviesSeriesBoth = 3, shuffleInterval = 15000, plotMaxLength = 550, token = 'YOURAPIKEYHERE', useTrailers = true;
+		let title = 'Spotlight', moviesSeriesBoth = 3, shuffleInterval = 15000, plotMaxLength = 350, useTrailers = true;
 		let isChangingSlide = false, player = null, slideChangeTimeout = null, isHomePageActive = false, showOnOtherPages = false;
 		let currentLocation = window.top.location.href;
 		let movieList = [], currentMovieIndex = 0;
 		let previousMovies = [];
 		let forwardMovies = [];
+
+		// Définir la base URL
+		const BASE_URL = '127.0.0.1:3000/api'; // Vous pouvez changer cela si nécessaire
 
 		const createElem = (tag, className, textContent, src, alt) => {
 			const elem = document.createElement(tag);
@@ -468,8 +471,10 @@
 		const startSlideChangeTimer = () => { clearTimeout(slideChangeTimeout); slideChangeTimeout = setTimeout(fetchRandomMovie, shuffleInterval); };
 
 		const checkBackdropAndLogo = movie => {
+			// Utilisation du pont pour vérifier l'existence des images
 			Promise.all(['/Images/Backdrop/0', '/Images/Logo'].map(url => 
-				fetch(`/Items/${movie.Id}${url}`, { method: 'HEAD' }).then(response => response.ok)
+				fetch(`${BASE_URL}/Items/${movie.Id}${url}`, { method: 'HEAD' }) // Utilisation de la base URL
+					.then(response => response.ok)
 			)).then(([backdropExists, logoExists]) => 
 				backdropExists && logoExists ? createSlideElement(movie, true) : fetchRandomMovie()
 			).catch(() => fetchRandomMovie());
@@ -525,15 +530,13 @@
 
 		const fetchNextMovie = () => {
 			const fetchCurrentUserId = () => 
-				fetch('/Sessions', {
-					headers: { 'Authorization': `MediaBrowser Client="Jellyfin Web", Device="YourDeviceName", DeviceId="YourDeviceId", Version="YourClientVersion", Token="${token}"` }
-				})
-				.then(response => response.json())
-				.then(sessions => {
-					const currentSession = sessions.find(session => session.UserId);
-					return currentSession ? currentSession.UserId : null;
-				})
-				.catch(() => null);
+				fetch(`${BASE_URL}/Sessions`) // Utilisation de la base URL
+					.then(response => response.json())
+					.then(sessions => {
+						const currentSession = sessions.find(session => session.UserId);
+						return currentSession ? currentSession.UserId : null;
+					})
+					.catch(() => null);
 
 			fetchCurrentUserId().then(currentUserId => {
 				if (!currentUserId) {
@@ -541,21 +544,19 @@
 					return;
 				}
 
-				const headers = { 'Authorization': `MediaBrowser Client="Jellyfin Web", Device="YourDeviceName", DeviceId="YourDeviceId", Version="YourClientVersion", Token="${token}"` };
-
 				if (movieList.length > 0) {
 					if (currentMovieIndex >= movieList.length) currentMovieIndex = 0;
 					const movieId = movieList[currentMovieIndex];
 					currentMovieIndex++;
 
-					fetch(`/Users/${currentUserId}/Items/${movieId}?Fields=Overview,RemoteTrailers,PremiereDate,RunTimeTicks,ChildCount,Genres`, { headers })
+					fetch(`${BASE_URL}/Users/${currentUserId}/Items/${movieId}?Fields=Overview,RemoteTrailers,PremiereDate,RunTimeTicks,ChildCount,Genres`) // Utilisation de la base URL
 						.then(response => response.json())
 						.then(checkBackdropAndLogo)
 						.catch(() => startSlideChangeTimer())
 						.finally(() => { isChangingSlide = false; });
 				} else {
 					const itemTypes = moviesSeriesBoth === 1 ? 'Movie' : (moviesSeriesBoth === 2 ? 'Series' : 'Movie,Series');
-					fetch(`/Users/${currentUserId}/Items?IncludeItemTypes=${itemTypes}&Recursive=true&Limit=1&SortBy=random&Fields=Id,Overview,RemoteTrailers,PremiereDate,RunTimeTicks,ChildCount,Genres`, { headers })
+					fetch(`${BASE_URL}/Users/${currentUserId}/Items?IncludeItemTypes=${itemTypes}&Recursive=true&Limit=1&SortBy=random&Fields=Id,Overview,RemoteTrailers,PremiereDate,RunTimeTicks,ChildCount,Genres`) // Utilisation de la base URL
 						.then(response => response.json())
 						.then(data => { if (data.Items[0]) checkBackdropAndLogo(data.Items[0]); })
 						.catch(() => startSlideChangeTimer())
