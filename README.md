@@ -1,4 +1,5 @@
 > Original [readme](old.README.md)
+
 Only the [default](spotlight.html) and the [mobile view on desktop screens](mobile-desktop/spotlight.html) are ready to use the custom api for now. 
 I know some issues are persisting, but I'm too lazy to fix them (I hope to fix them someday; if I don't, please feel free to make a pr if you need to fix it). 
 I made this modification for my own use, so I may not be able to help you. 
